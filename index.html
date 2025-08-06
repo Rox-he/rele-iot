@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Control del Relé</title>
+</head>
+<body>
+  <h1>Control del Relé</h1>
+  <button onclick="cambiarEstado('ON')">Encender</button>
+  <button onclick="cambiarEstado('OFF')">Apagar</button>
+  <p id="respuesta"></p>
+
+  <script>
+    async function cambiarEstado(estado) {
+      const res = await fetch('http://localhost:3000/api/iot/estado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado })
+      });
+
+      const data = await res.json();
+      document.getElementById('respuesta').innerText = data.mensaje || data.error;
+    }
+  </script>
+</body>
+</html>
