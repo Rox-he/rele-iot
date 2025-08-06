@@ -3,48 +3,31 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost', 'https://tu-web.com'], // agrega aquí tus frontends permitidos
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 
-// Importa la conexión a Firebase
-const db = require('./firebaseconfig');
+// Estado del relé
+let estadoRele = "OFF";
 
-// Estado local del servo (sin Firebase)
+// Estado del ángulo del servo
 let anguloServo = 90;
 
-// Rutas para el relé (usa Firebase)
-app.get('/api/iot/estado', async (req, res) => {
-  try {
-    const snapshot = await db.ref('estadoRele').once('value');
-    const estado = snapshot.val() || "OFF";
-    res.json({ estado });
-  } catch (error) {
-    res.status(500).json({ error: 'Error al leer desde Firebase' });
-  }
+// === Rele ===
+app.get('/api/iot/estado', (req, res) => {
+  res.json({ estado: estadoRele });
 });
 
-app.post('/api/iot/estado', async (req, res) => {
+app.post('/api/iot/estado', (req, res) => {
   const { estado } = req.body;
   if (estado === "ON" || estado === "OFF") {
-    try {
-      await db.ref('estadoRele').set(estado);
-      res.json({ mensaje: `Estado cambiado a ${estado}` });
-    } catch (error) {
-      res.status(500).json({ error: 'Error al escribir en Firebase' });
-    }
+    estadoRele = estado;
+    res.json({ mensaje: `Estado cambiado a ${estadoRele}` });
   } else {
-    res.status(400).json({ error: 'Estado inválido (usa ON u OFF)' });
+    res.status(400).json({ error: "Estado inválido (usa ON u OFF)" });
   }
 });
 
-// Rutas para servo (local, sin Firebase)
+// === Servomotor ===
 app.get('/api/iot/angulo', (req, res) => {
   res.json({ angulo: anguloServo });
 });
@@ -60,5 +43,5 @@ app.post('/api/iot/angulo', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Servidor API corriendo en http://localhost:${port}`);
+  console.log(`Servidor API en http://localhost:${port}`);
 });
